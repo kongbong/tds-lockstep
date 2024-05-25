@@ -2,4 +2,4 @@
 Top-down shooter using Lockstep
 
 Client: Phaser, Socket.io
-Server: Go, Socket.io
+Server: Node.js, Socket.io
