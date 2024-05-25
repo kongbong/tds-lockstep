@@ -1,5 +1,5 @@
 import 'phaser'
-import MainScene from './scenes/mainScene'
+import GameScene from './scenes/gameScene'
 import PreloadScene from './scenes/preloadScene'
 
 const DEFAULT_WIDTH = 1280
@@ -15,14 +15,7 @@ const config = {
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT
   },
-  scene: [PreloadScene, MainScene],
-  physics: {
-    default: 'arcade',
-    arcade: {
-      debug: false,
-      gravity: { y: 400 }
-    }
-  }
+  scene: [PreloadScene, GameScene]
 }
 
 window.addEventListener('load', () => {
