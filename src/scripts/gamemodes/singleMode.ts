@@ -1,11 +1,15 @@
 import InputData from "../input/inputData";
-import InputGetterInterface from "../input/inputGetterInterface";
-import { PlayerInfo, GameModeInterface } from "./gamemodeInterface";
+import PlayerInfo from "./playerinfo";
+import GameModeInterface from "./gamemodeInterface";
+import FrameData from "../network/frameData";
 
-export default class SingleMode implements GameModeInterface, InputGetterInterface {
+export default class SingleMode implements GameModeInterface {
+  id: string;
   scene: Phaser.Scene;
   cursor: Phaser.Types.Input.Keyboard.CursorKeys;
   SPACE: Phaser.Input.Keyboard.Key;
+  spaceDown: boolean = false;
+  frameNo: number = 0;
 
   onNewPlayer: (info: PlayerInfo) => void;
   onRemovePlayer: (id: string) => void;
@@ -19,9 +23,10 @@ export default class SingleMode implements GameModeInterface, InputGetterInterfa
   }
 
   startGame(): void {
+    this.id = crypto.randomUUID();
     // add local player
     const playerInfo = new PlayerInfo();
-    playerInfo.id = "MyName:" + crypto.randomUUID();
+    playerInfo.id = this.id;
     playerInfo.x = 600;
     playerInfo.y = 500;
     playerInfo.angle = 0;
@@ -30,29 +35,50 @@ export default class SingleMode implements GameModeInterface, InputGetterInterfa
     this.onNewPlayer(playerInfo);
   }
 
-  update(dt: number): void {}
-
-  getRemainDeltaTime(dt: number): number {
-    return dt;
+  getFrameCount(): number {
+    return 1;
   }
 
-  getInputFrame(id: string): InputData {
-    const inputFrame = new InputData(); 
+  getThisFrameDataAndAdvanceTime(dt: number): FrameData|undefined {
+    const frameData = new FrameData();
+    frameData.duration = dt;
+    frameData.frame = this.frameNo;
+    frameData.inputDatas = [];
+    this.frameNo++;
+    frameData.inputDatas.push(this.getInputData());
+    return frameData;
+  }
+
+  getInputData(): InputData {
+    const inputData = new InputData(); 
+    inputData.id = this.id;
     if (this.cursor.up.isDown) {
-      inputFrame.up = true;
+      inputData.up = true;
     }
     if (this.cursor.down.isDown) {
-      inputFrame.down = true;
+      inputData.down = true;
     } 
     if (this.cursor.left.isDown) {
-      inputFrame.left = true;
+      inputData.left = true;
     }
     if (this.cursor.right.isDown) {
-      inputFrame.right = true;
+      inputData.right = true;
     }
-    if (Phaser.Input.Keyboard.DownDuration(this.SPACE)) {
-      inputFrame.fire = true;
+    if (this.spaceDown) {
+      if (Phaser.Input.Keyboard.JustUp(this.SPACE)) {
+        this.spaceDown = false;
+        inputData.fire = false;
+      } else {
+        inputData.fire = true;
+      }
+    } else {
+      if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
+        this.spaceDown = true;
+        inputData.fire = true;
+      } else {
+        inputData.fire = false;      
+      }
     }
-    return inputFrame;
+    return inputData;
   }
 }

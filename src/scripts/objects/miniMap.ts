@@ -27,6 +27,8 @@ export default class Minimap {
 
     let i = 0;
     this.gameScene.enemyShips.forEach((enemy) => {
+      if (!this.gameScene.playerShip) return;
+      
       let distance = Phaser.Math.Distance.Between(
         this.gameScene.playerShip.x,
         this.gameScene.playerShip.y,

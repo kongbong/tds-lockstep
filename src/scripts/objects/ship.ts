@@ -19,11 +19,13 @@ export default class Ship extends Phaser.GameObjects.Sprite {
   }
 
   update() {
+    const lastX = this.x;
+    const lastY = this.y;
     this.x = this.simulationShip.x;
     this.y = this.simulationShip.y;
     this.angle = this.simulationShip.angle;
     
-    if (Phaser.Math.Between(1, 4) > 1) {
+    if ((lastX !== this.x || lastY !== this.y) && Phaser.Math.Between(1, 4) > 1) {
       this.gameScene.thrust.add(
         new Particle(this.scene, this.x, this.y, 0xffffff, 10)
       );

@@ -1,9 +1,13 @@
-import SimulationBox from "../simulation/simulationBox";
+import SimulationWorld from "../simulation/simulationWorld";
 import SimulationShip from "../simulation/simulationShip";
 import Ship from "../objects/ship";
 import Minimap from "../objects/miniMap";
-import { GameModeInterface } from "../gamemodes/gamemodeInterface";
+import GameModeInterface from "../gamemodes/gamemodeInterface";
 import SingleMode from "../gamemodes/singleMode";
+import MultiplayMode from "../gamemodes/multiplayMode";
+import { SimulationObjectInterface } from "../simulation/simulationObjectInterface";
+import SimulationProjectile from "../simulation/simulationProjectile";
+import Projectile from "../objects/projectile";
 
 class Audios {
   pick: Phaser.Sound.BaseSound;
@@ -16,11 +20,14 @@ class Audios {
 export default class GameScene extends Phaser.Scene {
   gameMode: GameModeInterface
   audios: Audios;
-  simulationBox: SimulationBox;
+  simulationBox: SimulationWorld;
   thrust: Phaser.GameObjects.Layer;
   minimap: Minimap;
-  playerShip: Ship;
+
+  // objects
+  playerShip: Ship|undefined;
   enemyShips: Ship[] = [];
+  projectileGroup: Phaser.GameObjects.Group;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -29,6 +36,7 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.loadAudios();    
     this.addMinimap(); 
+    this.makeProjectileGroup();
     this.startGame();
     this.thrust = this.add.layer();
     
@@ -48,17 +56,23 @@ export default class GameScene extends Phaser.Scene {
   addMinimap() {
     this.minimap = new Minimap(this, 120, 120, 100, 0x000000);
   }
+  
+  makeProjectileGroup() {
+    this.projectileGroup = this.add.group({
+      classType: Projectile,
+      maxSize: 100,
+      runChildUpdate: true,      
+    });
+  }
 
   startGame() {
-    // Starts the game in single player mode
-    const singleMode = new SingleMode(this);
-    this.gameMode = singleMode;
+    // Starts the game in multi player mode
+    const gameMode = new MultiplayMode(this);
+    this.gameMode = gameMode;
 
-    this.simulationBox = new SimulationBox(this, singleMode, singleMode);
-    this.simulationBox.onAddMyShip = this.onAddShip.bind(this);
-    this.simulationBox.onAddEnemyShip = this.onAddShip.bind(this);    
-    this.simulationBox.onRemoveMyShip = this.onRemoveShip.bind(this);
-    this.simulationBox.onRemoveEnemyShip = this.onRemoveShip.bind(this);
+    this.simulationBox = new SimulationWorld(this, gameMode);
+    this.simulationBox.onAddObj = this.onAddObj.bind(this);
+    this.simulationBox.onRemoveObj = this.onRemoveObj.bind(this);
     this.simulationBox.onEndGame = this.onEndGame.bind(this);
   }
   
@@ -66,16 +80,31 @@ export default class GameScene extends Phaser.Scene {
     this.audios[key].play({ volume: 0.2 });
   }
 
-  onAddShip(simulationShip: SimulationShip) {
-    console.log("onAdd", simulationShip);
+  onAddObj(simulationObj: SimulationObjectInterface) {
+    if (simulationObj instanceof SimulationShip) {
+      this.onAddShip(simulationObj);
+    } else if (simulationObj instanceof SimulationProjectile) {      
+      this.onAddProjectile(simulationObj);
+    }
+  }
 
+  onAddShip(simulationShip: SimulationShip) {  
+    console.log("onAddShip", simulationShip);
     const ship = new Ship(this, simulationShip);
-    if (simulationShip.isPlayer) {
+    if (simulationShip.isLocal) {
       this.playerShip = ship;
       this.setCamera(ship);
     } else {
       this.enemyShips.push(ship);
     }
+  }
+
+  onAddProjectile(simulationProjectile: SimulationProjectile) {
+    // Add projectile object
+    const projectile = this.projectileGroup.get(simulationProjectile.x, simulationProjectile.y, "shot") as Projectile;
+    projectile.simulationProjectile = simulationProjectile;
+    projectile.setVisible(true);
+    projectile.setActive(true);
   }
   
   setCamera(target: Ship) {
@@ -83,15 +112,28 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(target, true, 0.05, 0.05, 0, 100);
   }
   
-  onRemoveShip(shipId: string) {
-    console.log("onRemove", shipId);
-    if (shipId === this.playerShip.simulationShip.id) {
-      this.playerShip.destroy();
+  onRemoveObj(objId: string) {
+    let removed = false;
+    if (objId === this.playerShip?.simulationShip.id) {
+      this.playerShip?.destroy();
+      this.playerShip = undefined;
+      removed = true;
     } else {
-      const ship = this.enemyShips.find((ship) => ship.simulationShip.id === shipId);
+      const ship = this.enemyShips.find((ship) => ship.simulationShip.id === objId);
       if (ship) {
         ship.destroy();
         this.enemyShips = this.enemyShips.filter((s) => s !== ship);
+        removed = true;
+      }
+    }
+
+    if (!removed) {
+      // it is a projectile
+      const projectile = this.projectileGroup.getChildren().find((projectile) => {
+        return (projectile as Projectile).simulationProjectile.id === objId;
+      });
+      if (projectile) {
+        this.projectileGroup.killAndHide(projectile);
       }
     }
   }
