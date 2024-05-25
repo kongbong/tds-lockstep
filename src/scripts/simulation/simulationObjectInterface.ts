@@ -9,4 +9,6 @@ export interface SimulationObjectInterface {
   y: number;
   angle: number;
   objType: ObjectType;
+
+  setId(id: string): void;
 }

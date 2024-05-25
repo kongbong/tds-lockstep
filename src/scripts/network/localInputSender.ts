@@ -1,4 +1,4 @@
-import NetworkClientInterface from "./networkClientInterface";
+import NetworkClientInterface from "./ConnectionInterface";
 import InputData from "../input/inputData";
 
 export default class LocalInputSender {

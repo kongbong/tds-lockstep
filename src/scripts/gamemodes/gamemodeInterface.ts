@@ -1,11 +1,15 @@
-import PlayerInfo from "./playerinfo";
-import FrameData from "../network/frameData";
+import PlayerInfo from "./playerStartingInfo";
+import FrameData from "../input/frameData";
+
+import { SimulationObjectInterface } from "../simulation/simulationObjectInterface";
+import { GameModeInfo } from "./gameModeInfo";
 
 export default interface GameModeInterface {
-  onNewPlayer: (info: PlayerInfo) => void;
-  onRemovePlayer: (id: string) => void;
+  onAddObj: (obj: SimulationObjectInterface) => void;
+  onRemoveObj: (id: string) => void;
+  onEndGame: () => void;
 
-  startGame(): void;
-  getFrameCount(): number;
-  getThisFrameDataAndAdvanceTime(dt: number): FrameData|undefined;
+  initGame(gameInfo: GameModeInfo): void;
+  startGame():void;
+  update(dt: number): void;
 }

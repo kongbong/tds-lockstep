@@ -1,4 +1,4 @@
-import InputData from '../input/inputData';
+import InputData from './inputData';
 export default class FrameData {
   frame: number;
   duration: number;

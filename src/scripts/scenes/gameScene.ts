@@ -1,13 +1,15 @@
-import SimulationWorld from "../simulation/simulationWorld";
 import SimulationShip from "../simulation/simulationShip";
 import Ship from "../objects/ship";
 import Minimap from "../objects/miniMap";
 import GameModeInterface from "../gamemodes/gamemodeInterface";
-import SingleMode from "../gamemodes/singleMode";
-import MultiplayMode from "../gamemodes/multiplayMode";
+import CommonMode from "../gamemodes/commonMode";
 import { SimulationObjectInterface } from "../simulation/simulationObjectInterface";
 import SimulationProjectile from "../simulation/simulationProjectile";
 import Projectile from "../objects/projectile";
+import NetworkClientInterface from "../network/ConnectionInterface";
+import { GameModeInfo, GameModeType } from "../gamemodes/gameModeInfo";
+import { ConnectionType, makeConnection } from "../network/connectionFactory";
+import { DrawDepth } from "../objects/drawDepth";
 
 class Audios {
   pick: Phaser.Sound.BaseSound;
@@ -18,9 +20,11 @@ class Audios {
 }
 
 export default class GameScene extends Phaser.Scene {
-  gameMode: GameModeInterface
+  myClientID: string;
+  conn: NetworkClientInterface;
+  gameMode: GameModeInterface;
+
   audios: Audios;
-  simulationBox: SimulationWorld;
   thrust: Phaser.GameObjects.Layer;
   minimap: Minimap;
 
@@ -34,13 +38,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
+    this.myClientID = crypto.randomUUID();
+
     this.loadAudios();    
     this.addMinimap(); 
     this.makeProjectileGroup();
-    this.startGame();
+    this.setupGame(GameModeType.LOCAL);
     this.thrust = this.add.layer();
-    
-    this.simulationBox.start();    
+    this.thrust.depth = DrawDepth.THRUST;
   }
 
   loadAudios() {    
@@ -65,15 +70,93 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  startGame() {
-    // Starts the game in multi player mode
-    const gameMode = new MultiplayMode(this);
-    this.gameMode = gameMode;
+  setupGame(modeType: GameModeType) {
+    switch (modeType) {
+      case GameModeType.LOCAL:
+        this.conn = makeConnection(ConnectionType.LOCAL);
+        break;
+      case GameModeType.ONLINE_PVP:
+        this.conn = makeConnection(ConnectionType.SOCKETIO);
+        break;
+    }
+    this.conn.onRecvGameInfo = this.initGame.bind(this);
+    this.conn.onRecvAllJoin = this.allJoin.bind(this);
+    this.conn.onRecvStartGame = this.startGame.bind(this);
+    this.conn.connect(this.myClientID, undefined);
+  }
 
-    this.simulationBox = new SimulationWorld(this, gameMode);
-    this.simulationBox.onAddObj = this.onAddObj.bind(this);
-    this.simulationBox.onRemoveObj = this.onRemoveObj.bind(this);
-    this.simulationBox.onEndGame = this.onEndGame.bind(this);
+  initGame(gameInfo: GameModeInfo) {
+    switch (gameInfo.type) {
+      case GameModeType.LOCAL:
+        this.initLocalGame(gameInfo);
+        break;
+      case GameModeType.ONLINE_PVP:
+        this.initOnlinePVPGame(gameInfo);
+        break;
+    }
+  }
+
+  initLocalGame(gameInfo: GameModeInfo) {
+    this.gameMode = new CommonMode(this, this.myClientID, this.conn);
+    this.hookupGameMode(this.gameMode, gameInfo);    
+  }
+  
+  initOnlinePVPGame(gameInfo: GameModeInfo) {
+    this.gameMode = new CommonMode(this, this.myClientID, this.conn);
+    this.hookupGameMode(this.gameMode, gameInfo);    
+  }
+
+  hookupGameMode(gameMode: GameModeInterface, gameInfo: GameModeInfo) {
+    // Starts the game
+    this.gameMode.onAddObj = this.onAddObj.bind(this);
+    this.gameMode.onRemoveObj = this.onRemoveObj.bind(this);
+    this.gameMode.onEndGame = this.onEndGame.bind(this);
+
+    this.gameMode.initGame(gameInfo);
+  }
+
+  // all players joined, will start in 3sec
+  allJoin() {
+    this.showingCountDown(3);
+  }
+
+  showingCountDown(sec: number) {
+    const width = +this.sys.game.config.width;
+    const height = +this.sys.game.config.height;
+    const center_width = width / 2;
+    const center_height = height / 2;
+
+    const message = sec === 0 ? "Start!" : sec.toString();
+
+    const text = this.add
+      .bitmapText(
+        center_width,
+        center_height,
+        "wendy",
+        message,
+        400
+      )      
+      .setOrigin(0.5);
+    text.tint = 0xff0000;
+
+    // alpha 0 -> 1
+    // Scale 1.5 -> 1
+    this.tweens.add({
+      targets: text,
+      duration: 1000,
+      alpha: { from: 0, to: 1 },
+      scale: { from: 1, to: 0.5 },
+      onComplete: () => {
+        text.destroy();
+        if (sec > 0) {
+          this.showingCountDown(sec - 1);
+        }
+      },
+    });
+  }
+
+  startGame() {
+    this.gameMode.startGame();
   }
   
   playAudio(key: string) {
@@ -138,8 +221,9 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  update(time: number, deltaTime: number) {
-    this.simulationBox.update(deltaTime);
+  update(time: number, deltaTime: number) {    
+    this.conn.update(deltaTime);
+    this.gameMode.update(deltaTime);
     this.minimap.update();
   }
 

@@ -1,4 +1,4 @@
-import FrameData from "../network/frameData";
+import FrameData from "../input/frameData";
 import { ObjectType, SimulationObjectInterface } from "./simulationObjectInterface";
 import SimulationWorld from './simulationWorld';
 import SimulationProjectile from './simulationProjectile';
@@ -19,9 +19,8 @@ export default class SimulationShip implements SimulationObjectInterface {
   objType: ObjectType;
   fireTime: number = 0;
 
-  constructor(id: string, playerId: string, x: number, y: number, angle: number, isLocal: boolean, world: SimulationWorld) {
+  constructor(playerId: string, x: number, y: number, angle: number, isLocal: boolean, world: SimulationWorld) {
     this.world = world;
-    this.id = id;
     this.playerId = playerId;
     this.x = x;
     this.y = y;
@@ -30,6 +29,10 @@ export default class SimulationShip implements SimulationObjectInterface {
     this.angularVelocity = 0;
     this.isLocal = isLocal;
     this.objType = ObjectType.Ship;
+  }
+  
+  setId(id: string): void {
+    this.id = id;
   }
 
   update(frameData: FrameData) {
@@ -78,6 +81,6 @@ export default class SimulationShip implements SimulationObjectInterface {
     const startX = this.x + Math.cos(rad) * 30;
     const startY = this.y + Math.sin(rad) * 30;
 
-    this.world.addObj(new SimulationProjectile(this.world.newObjId(), startX, startY, this.angle, this.world));
+    this.world.addObj(new SimulationProjectile(startX, startY, this.angle, this.world));
   }
 }

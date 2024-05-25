@@ -1,6 +1,7 @@
 import GameScene from "../scenes/gameScene";
 import SimulationShip from '../simulation/simulationShip';
 import Particle from './particle';
+import { DrawDepth } from './drawDepth';
 
 // Ship represents the player or enemy main object
 // it is just visual representation and it is simulated by SimulationShip
@@ -13,6 +14,8 @@ export default class Ship extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     this.gameScene = scene;
     this.simulationShip = simulationShip;
+    // this will always draw on top.
+    this.depth = DrawDepth.SHIP;
 
     this.tint = Math.random() * 0xffffff;    
     this.scene.events.on("update", this.update, this);

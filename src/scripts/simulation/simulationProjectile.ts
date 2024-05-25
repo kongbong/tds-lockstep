@@ -1,4 +1,4 @@
-import FrameData from "../network/frameData";
+import FrameData from "../input/frameData";
 import { ObjectType, SimulationObjectInterface } from "./simulationObjectInterface";
 import SimulationWorld from "./simulationWorld";
 
@@ -15,8 +15,7 @@ export default class SimulationProjectile implements SimulationObjectInterface {
   objType: ObjectType;
   world: SimulationWorld;
   
-  constructor(id: string, x: number, y: number, angle: number, simulationWorld: SimulationWorld) {
-    this.id = id;
+  constructor(x: number, y: number, angle: number, simulationWorld: SimulationWorld) {
     this.x = x;
     this.y = y;
     this.angle = angle;
@@ -28,6 +27,10 @@ export default class SimulationProjectile implements SimulationObjectInterface {
     this.timeLeft = lifeTime;
     this.objType = ObjectType.Projectile;
     this.world = simulationWorld;
+  }
+  
+  setId(id: string): void {
+    this.id = id;
   }
     
   update(frameData: FrameData) {
