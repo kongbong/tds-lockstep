@@ -54,7 +54,7 @@ export default class GameScene extends Phaser.Scene {
     const singleMode = new SingleMode(this);
     this.gameMode = singleMode;
 
-    this.simulationBox = new SimulationBox(singleMode, singleMode);
+    this.simulationBox = new SimulationBox(this, singleMode, singleMode);
     this.simulationBox.onAddMyShip = this.onAddShip.bind(this);
     this.simulationBox.onAddEnemyShip = this.onAddShip.bind(this);    
     this.simulationBox.onRemoveMyShip = this.onRemoveShip.bind(this);

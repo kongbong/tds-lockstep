@@ -12,13 +12,15 @@ export default class SimulationBox {
   onRemoveEnemyShip: (id: string) => void;
   onEndGame: () => void;
 
+  scene: Phaser.Scene;
   gameMode: GameModeInterface;
   inputGetter: InputGetterInterface;
   myId: string;
   myShip: (SimulationShip | undefined) = undefined;
   enemyShips: SimulationShip[] = [];
 
-  constructor(gameMode: GameModeInterface, inputGetter: InputGetterInterface) {
+  constructor(scene: Phaser.Scene, gameMode: GameModeInterface, inputGetter: InputGetterInterface) {
+    this.scene = scene;
     this.gameMode = gameMode;
     this.inputGetter = inputGetter;
 
@@ -47,6 +49,8 @@ export default class SimulationBox {
   onRemovePlayer(id: string) {
     if (id === this.myId) {
       this.myShip = undefined;
+      // End game after 1 second
+      this.scene.time.delayedCall(1000, this.onEndGame, [], this);      
     } else {
       const enemyShip = this.enemyShips.find((ship) => ship.id === id);
       if (enemyShip) {
