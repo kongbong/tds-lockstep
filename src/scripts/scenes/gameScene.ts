@@ -22,7 +22,7 @@ class Audios {
 export default class GameScene extends Phaser.Scene {
   myClientID: string;
   conn: NetworkClientInterface;
-  gameMode: GameModeInterface;
+  gameMode: GameModeInterface|undefined;
 
   audios: Audios;
   thrust: Phaser.GameObjects.Layer;
@@ -43,7 +43,7 @@ export default class GameScene extends Phaser.Scene {
     this.loadAudios();    
     this.addMinimap(); 
     this.makeProjectileGroup();
-    this.setupGame(GameModeType.LOCAL);
+    this.setupGame(GameModeType.ONLINE_PVP);
     this.thrust = this.add.layer();
     this.thrust.depth = DrawDepth.THRUST;
   }
@@ -108,15 +108,16 @@ export default class GameScene extends Phaser.Scene {
 
   hookupGameMode(gameMode: GameModeInterface, gameInfo: GameModeInfo) {
     // Starts the game
-    this.gameMode.onAddObj = this.onAddObj.bind(this);
-    this.gameMode.onRemoveObj = this.onRemoveObj.bind(this);
-    this.gameMode.onEndGame = this.onEndGame.bind(this);
+    gameMode.onAddObj = this.onAddObj.bind(this);
+    gameMode.onRemoveObj = this.onRemoveObj.bind(this);
+    gameMode.onEndGame = this.onEndGame.bind(this);
 
-    this.gameMode.initGame(gameInfo);
+    gameMode.initGame(gameInfo);
   }
 
   // all players joined, will start in 3sec
   allJoin() {
+    console.log("allJoin");
     this.showingCountDown(3);
   }
 
@@ -156,7 +157,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   startGame() {
-    this.gameMode.startGame();
+    console.log("startGame");
+    this.gameMode?.startGame();
   }
   
   playAudio(key: string) {
@@ -223,7 +225,9 @@ export default class GameScene extends Phaser.Scene {
 
   update(time: number, deltaTime: number) {    
     this.conn.update(deltaTime);
-    this.gameMode.update(deltaTime);
+    if (this.gameMode) {
+      this.gameMode.update(deltaTime);
+    }
     this.minimap.update();
   }
 

@@ -1,9 +1,11 @@
 import { GameModeInfo } from "../gamemodes/gameModeInfo";
-import FrameData from "../input/frameData";
-import InputData from "../input/inputData";
+import FrameData from "../networkdata/frameData";
+import InputData from "../networkdata/inputData";
+import NewPlayerInfo from "../networkdata/newPlayerInfo";
 
 export default interface ConnectionInterface { 
-  onRecvGameInfo: (info: GameModeInfo) => void;  
+  onRecvGameInfo: (info: GameModeInfo) => void;
+  OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
   onDisconnectedPlayer: (playerId: string) => void;

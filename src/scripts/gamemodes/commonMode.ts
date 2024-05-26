@@ -5,6 +5,7 @@ import { GameModeInfo } from "./gameModeInfo";
 import SimulationShip from "../simulation/simulationShip";
 import InputSendRecv from "../network/inputSendRecv";
 import ConnectionInterface from "../network/ConnectionInterface";
+import NewPlayerInfo from "../networkdata/newPlayerInfo";
 
 export default class CommonMode implements GameModeInterface {
   onAddObj: (obj: SimulationObjectInterface) => void;
@@ -16,10 +17,12 @@ export default class CommonMode implements GameModeInterface {
 
   myPlayerId: string;
   myShip: (SimulationObjectInterface | undefined) = undefined;
-
-  constructor(scene: Phaser.Scene, myPlayerId: string, conn: ConnectionInterface) {
+  ships: any = {};
+  
+  constructor(scene: Phaser.Scene, myPlayerId: string, conn: ConnectionInterface) {    
     this.myPlayerId = myPlayerId;
     this.inputSendRecv = new InputSendRecv(myPlayerId, scene, conn);
+    conn.OnRecvNewPlayer = this.onRecvNewPlayer.bind(this);
   }
 
   initGame(gameInfo: GameModeInfo): void {
@@ -33,7 +36,7 @@ export default class CommonMode implements GameModeInterface {
       }
     };
 
-    // add local player
+    // add player ships
     if (gameInfo.playerStartingInfos) {
       gameInfo.playerStartingInfos.forEach((playerInfo) => {
         const isLocal = playerInfo.playerId === this.myPlayerId;
@@ -46,10 +49,20 @@ export default class CommonMode implements GameModeInterface {
           this.world);
         if (isLocal) {
           this.myShip = ship;
+        } else {
+          this.ships[playerInfo.playerId] = ship;
         }
         this.world.addObj(ship);
       });
     }
+  }
+
+  onRecvNewPlayer(info: NewPlayerInfo): void {
+    console.log("onRecvNewPlayer", info);
+    const ship = this.ships[info.oldPlayerId];
+    ship.playerId = info.newPlayerId;
+    this.ships[info.oldPlayerId] = undefined;
+    this.ships[info.newPlayerId] = ship;
   }
 
   startGame(): void {

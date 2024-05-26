@@ -1,8 +1,8 @@
 import { GameModeInfo, GameModeType } from '../gamemodes/gameModeInfo';
-import PlayerStartingInfo from '../gamemodes/playerStartingInfo';
-import FrameData from '../input/frameData';
-import InputData from '../input/inputData';
+import FrameData from '../networkdata/frameData';
+import InputData from '../networkdata/inputData';
 import ConnectionInterface from './ConnectionInterface';
+import NewPlayerInfo from "../networkdata/newPlayerInfo";
 
 const allJoinInterval = 1000; // 1sec waiting for ready
 const readyInterval = 3000; // 3sec waiting for start
@@ -16,6 +16,7 @@ enum Status {
 
 export default class LocalConnection implements ConnectionInterface {
   onRecvGameInfo: (info: GameModeInfo) => void;
+  OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
   onDisconnectedPlayer: (playerId: string) => void;

@@ -1,4 +1,4 @@
-import FrameData from "../input/frameData";
+import FrameData from "../networkdata/frameData";
 import { ObjectType, SimulationObjectInterface } from "./simulationObjectInterface";
 import SimulationWorld from './simulationWorld';
 import SimulationProjectile from './simulationProjectile';

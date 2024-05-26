@@ -1,6 +1,6 @@
 import { SimulationObjectInterface } from "./simulationObjectInterface";
-import FrameDataGetter from "../input/frameDataGetter";
-import FrameData from "../input/frameData";
+import FrameDataGetter from "../networkdata/frameDataGetter";
+import FrameData from "../networkdata/frameData";
 
 // each simution update time 10ms
 const fixedUpdateTime = 10;
@@ -49,7 +49,7 @@ export default class SimulationWorld {
   // Simulation update
   update(deltaTime: number) {
     if (!this.isStarted) return;
-    
+
     this.acculatedTime += deltaTime;
 
     // if remain frame is so long then we need to simulate until single frame is remained.

@@ -1,8 +1,8 @@
 import PlayerInfo from "./playerStartingInfo";
 
 export enum GameModeType {
-  LOCAL = 0,
-  ONLINE_PVP = 1,
+  LOCAL = "LOCAL",
+  ONLINE_PVP = "ONLINE_PVP",
 }
 
 export class GameModeInfo {

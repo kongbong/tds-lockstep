@@ -1,4 +1,4 @@
-import FrameDataGetter from '../input/frameDataGetter';
+import FrameDataGetter from '../networkdata/frameDataGetter';
 import ConnectionInterface from './ConnectionInterface';
 import LocalInputSender from './localInputSender';
 

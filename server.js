@@ -16,8 +16,6 @@ http.listen(5001, function() {
   console.log('Server ready, listening on *:5001');
 })
 
-const players = {};
-
 /*
 This is where we set all the events that our server will listen to. It will react like this:
 
@@ -29,36 +27,66 @@ Has the player moved? Notify it to the rest of the players so they can update th
 
 For debugging purposes, we left some logs on these events.
 */
-const PLAYER_START_POSITION_X = 600;
-const PLAYER_START_POSITION_Y = 500;
 let playerCount = 0;
 let lastInputs = {};
+let isStarted = false;
+const players = {};
+
+// predefined game info
+// this will be set when gameserver is assigned
+// but for now, we will use this as a default value
+let gameInfo = {
+  type: "ONLINE_PVP",
+  name: "default game",
+  playerStartingInfos: [
+    {
+      playerId: "player1",
+      name: "player1",
+      x: 600,
+      y: 500,
+      angle: 0,
+    },
+    {
+      playerId: "player2",
+      name: "player2",
+      x: 700,
+      y: 600,
+      angle: 0,
+    },
+  ],
+};
 
 io.on("connection", function (socket) {
   socket.on("join", function (info) {
     console.log("New player joined with state:", info);
-    playerInfo = {};        
-    playerInfo.x = PLAYER_START_POSITION_X + playerCount * 100;
-    playerInfo.y = PLAYER_START_POSITION_X + playerCount * 100;
-    playerInfo.angle = 0;
-    playerCount++;
-    
     const [name, key] = info.name.split(":");
-    playerInfo.id = key;
-    players[key] = playerInfo;
+    let oldPlayerId = gameInfo.playerStartingInfos[playerCount].playerId;
+    gameInfo.playerStartingInfos[playerCount].playerId = key;
+    players[key] = true;
+    playerCount++;
 
     socket.key = key;
 
-    socket.emit("currentPlayers", players);
-    socket.broadcast.emit("newPlayer", playerInfo);
+    socket.emit("initGame", gameInfo);
+    socket.broadcast.emit("newPlayer", {
+      oldPlayerId: oldPlayerId,
+      newPlayerId: key,
+    });
+
+    if (playerCount == 2) {
+      // every players are connected
+      io.sockets.emit("allJoin");
+      setTimeout(() => {
+        io.sockets.emit("startGame");
+        isStarted = true;    
+      }, 3000);
+    }
   });
 
   socket.on("input", function (input_data) {
     const key = input_data?.id;
-    if (players[key] == undefined) return;
+    if (!players[key]) return;
     lastInputs[key] = input_data;
-
-    //socket.broadcast.emit("playerMoved", players[key]);
   });  
 });
 
@@ -66,6 +94,7 @@ let frameNumber = 0;
 let lastTime = Date.now();
 
 setInterval(function () {
+  if (!isStarted) return;
   let now = Date.now();
   let frameData = {};
   frameData.duration = now - lastTime;
@@ -74,8 +103,7 @@ setInterval(function () {
 
   for (let key in lastInputs) {
     let input_data = lastInputs[key];
-    let player = players[key];
-    if (player == undefined) continue;    
+    if (!players[key]) continue;    
     frameData.inputDatas.push(input_data);
   }
 

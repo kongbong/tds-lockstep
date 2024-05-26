@@ -1,16 +1,18 @@
 import ConnectionInterface from "./ConnectionInterface";
 import { GameModeInfo } from "../gamemodes/gameModeInfo";
 import PlayerInfo from "../gamemodes/playerStartingInfo";
-import FrameData from "../input/frameData";
+import FrameData from "../networkdata/frameData";
 import { io, Socket } from "socket.io-client";
-import InputData from "../input/inputData";
+import InputData from "../networkdata/inputData";
+import NewPlayerInfo from "../networkdata/newPlayerInfo";
 
 export default class SocketIOConnection implements ConnectionInterface {
   socket: Socket;
   playerId: string;
   playerKeys: any = {};
 
-  onRecvGameInfo: (info: GameModeInfo) => void;  
+  onRecvGameInfo: (info: GameModeInfo) => void;
+  OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
   onDisconnectedPlayer: (playerId: string) => void;
@@ -25,11 +27,16 @@ export default class SocketIOConnection implements ConnectionInterface {
       this.socket = io();
     }
     
-    this.socket.on("initGame", (gameInfo: GameModeInfo) => {
+    this.socket.on("initGame", (gameInfo: GameModeInfo) => {      
       gameInfo.playerStartingInfos.forEach((playerInfo: PlayerInfo) => {
         this.playerKeys[playerInfo.playerId] = true;
       });
       this.onRecvGameInfo(gameInfo);
+    });
+    this.socket.on("newPlayer", (newPlayerInfo: NewPlayerInfo) => {      
+      this.playerKeys[newPlayerInfo.oldPlayerId] = undefined;
+      this.playerKeys[newPlayerInfo.newPlayerId] = true;
+      this.OnRecvNewPlayer(newPlayerInfo);
     });
     this.socket.on("allJoin", () => {
       this.onRecvAllJoin();
@@ -43,7 +50,9 @@ export default class SocketIOConnection implements ConnectionInterface {
         this.onDisconnectedPlayer(playerId);
       }
     });
-    this.socket.on("frameData", this.onFrameData);
+    this.socket.on("frameData", (frameData: FrameData) => {
+      this.onFrameData(frameData);
+    });
 
     this.socket.emit("join", {
       name: "MyName:" + this.playerId,
