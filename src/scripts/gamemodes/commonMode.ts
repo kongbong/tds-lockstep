@@ -11,7 +11,7 @@ export default class CommonMode implements GameModeInterface {
   onAddObj: (obj: SimulationObjectInterface) => void;
   onRemoveObj: (id: string) => void;
   onEndGame: () => void;
-
+  
   world: SimulationWorld;
   inputSendRecv: InputSendRecv;
 

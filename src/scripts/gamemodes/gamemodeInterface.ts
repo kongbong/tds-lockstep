@@ -1,6 +1,3 @@
-import PlayerInfo from "./playerStartingInfo";
-import FrameData from "../networkdata/frameData";
-
 import { SimulationObjectInterface } from "../simulation/simulationObjectInterface";
 import { GameModeInfo } from "./gameModeInfo";
 
