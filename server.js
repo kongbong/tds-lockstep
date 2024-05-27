@@ -88,6 +88,13 @@ io.on("connection", function (socket) {
     if (!players[key]) return;
     lastInputs[key] = input_data;
   });  
+
+  socket.on("disconnect", function (reason) {
+    console.log("Player disconnected:", socket.key);
+    delete players[socket.key];
+    delete lastInputs[socket.key];
+    io.sockets.emit("removePlayer", socket.key);
+  });
 });
 
 let frameNumber = 0;

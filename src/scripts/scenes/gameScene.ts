@@ -12,11 +12,9 @@ import { ConnectionType, makeConnection } from "../network/connectionFactory";
 import { DrawDepth } from "../objects/drawDepth";
 
 class Audios {
-  pick: Phaser.Sound.BaseSound;
   shot: Phaser.Sound.BaseSound;
   foeshot: Phaser.Sound.BaseSound;
   explosion: Phaser.Sound.BaseSound;
-  asteroid: Phaser.Sound.BaseSound;
 }
 
 export default class GameScene extends Phaser.Scene {
@@ -40,7 +38,8 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.myClientID = crypto.randomUUID();
 
-    this.loadAudios();    
+    this.loadAudios(); 
+    this.loadAnims();   
     this.addMinimap(); 
     this.makeProjectileGroup();
     this.setupGame(GameModeType.ONLINE_PVP);
@@ -50,13 +49,20 @@ export default class GameScene extends Phaser.Scene {
 
   loadAudios() {    
     this.audios = {
-      pick: this.sound.add("pick"),
       shot: this.sound.add("shot"),
       foeshot: this.sound.add("foeshot"),
       explosion: this.sound.add("explosion"),
-      asteroid: this.sound.add("asteroid"),
     };
   }
+
+  loadAnims() {
+    this.anims.create({
+      key: "shot",
+      frames: this.anims.generateFrameNames("shot"),
+      frameRate: 10,
+      repeat: -1,
+    });
+  }  
 
   addMinimap() {
     this.minimap = new Minimap(this, 120, 120, 100, 0x000000);
@@ -190,6 +196,8 @@ export default class GameScene extends Phaser.Scene {
     projectile.simulationProjectile = simulationProjectile;
     projectile.setVisible(true);
     projectile.setActive(true);
+    this.playAudio("shot");
+    projectile.anims.play("shot", true);
   }
   
   setCamera(target: Ship) {

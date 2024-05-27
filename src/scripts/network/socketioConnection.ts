@@ -15,7 +15,7 @@ export default class SocketIOConnection implements ConnectionInterface {
   OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
-  onDisconnectedPlayer: (playerId: string) => void;
+  onRemovePlayer: (playerId: string) => void;
   onFrameData: (frameData: FrameData) => void;
 
   connect(playerId: string, addr: string|undefined): void {
@@ -47,8 +47,11 @@ export default class SocketIOConnection implements ConnectionInterface {
     this.socket.on("removePlayer", (playerId: string) => {
       if (this.playerKeys[playerId]) {
         this.playerKeys[playerId] = undefined;
-        this.onDisconnectedPlayer(playerId);
+        this.onRemovePlayer(playerId);
       }
+    });
+    this.socket.on("disconnect", () => {
+      this.onRemovePlayer(this.playerId);
     });
     this.socket.on("frameData", (frameData: FrameData) => {
       this.onFrameData(frameData);

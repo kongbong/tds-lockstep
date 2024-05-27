@@ -16,13 +16,14 @@ export default class CommonMode implements GameModeInterface {
   inputSendRecv: InputSendRecv;
 
   myPlayerId: string;
-  myShip: (SimulationObjectInterface | undefined) = undefined;
+  myShip: (SimulationShip | undefined) = undefined;
   ships: any = {};
   
   constructor(scene: Phaser.Scene, myPlayerId: string, conn: ConnectionInterface) {    
     this.myPlayerId = myPlayerId;
     this.inputSendRecv = new InputSendRecv(myPlayerId, scene, conn);
     conn.OnRecvNewPlayer = this.onRecvNewPlayer.bind(this);
+    conn.onRemovePlayer = this.onRemovePlayer.bind(this);
   }
 
   initGame(gameInfo: GameModeInfo): void {
@@ -63,6 +64,22 @@ export default class CommonMode implements GameModeInterface {
     ship.playerId = info.newPlayerId;
     this.ships[info.oldPlayerId] = undefined;
     this.ships[info.newPlayerId] = ship;
+  }
+
+  onRemovePlayer(playerId: string): void {
+    console.log("onRemovePlayer", playerId);
+    if (this.myShip && this.myShip.playerId === playerId) {
+      // disconnected my connection
+      this.world.removeObj(this.myShip.id);
+      this.myShip = undefined;
+      this.onEndGame();
+    } else {
+      const ship = this.ships[playerId];
+      if (ship) {
+        this.world.removeObj(ship.id);
+        this.ships[playerId] = undefined;
+      }
+    }
   }
 
   startGame(): void {

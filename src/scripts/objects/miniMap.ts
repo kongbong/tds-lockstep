@@ -25,17 +25,18 @@ export default class Minimap {
   update() {
     if (!this.gameScene.playerShip) return;
 
+    const playerShip = this.gameScene.playerShip;
     let i = 0;
     this.gameScene.enemyShips.forEach((enemy) => {
-      if (!this.gameScene.playerShip) return;
+      if (!enemy) return;
       
       let distance = Phaser.Math.Distance.Between(
-        this.gameScene.playerShip.x,
-        this.gameScene.playerShip.y,
+        playerShip.x,
+        playerShip.y,
         enemy.x,
         enemy.y
       );
-      const angle = Phaser.Math.Angle.Between(this.x, this.y, enemy.x, enemy.y);
+      const angle = Phaser.Math.Angle.Between(playerShip.x, playerShip.y, enemy.x, enemy.y);
       distance /= 10;
       if (distance > this.radius) distance = this.radius;
 

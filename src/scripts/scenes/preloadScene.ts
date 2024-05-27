@@ -10,50 +10,27 @@ export default class PreloadScene extends Phaser.Scene {
     this.createBars();
     this.setLoadEvents();
 
-    for (let i = 0; i < 6; i++) {
-      this.load.audio(`muzik${i}`, `assets/sounds/muzik${i}.mp3`);
-    }
-
+    this.load.audio("muzik1", "assets/sounds/muzik1.mp3");
     this.load.image("logo", "assets/images/pigeon_logo.png");
     this.load.image("background", "assets/images/background.png");
     this.load.image("ship1_1", "assets/images/bird_topview.png");    
-    this.load.image("foeship", "assets/images/foeship.png");
-    this.load.image("pello", "assets/images/pello.png");
-    this.load.image("hex", "assets/images/hex64.png");
-    this.load.image("asteroid", "assets/images/asteroid.png");
-    this.load.audio("splash", "assets/sounds/splash.mp3");
     this.load.audio("game-over", "assets/sounds/game-over.mp3");
     this.load.audio("explosion", "assets/sounds/explosion.mp3");
     this.load.audio("shot", "assets/sounds/shot.mp3");
     this.load.audio("foeshot", "assets/sounds/foeshot.mp3");
-    this.load.audio("pick", "assets/sounds/pick.mp3");
-    this.load.audio("asteroid", "assets/sounds/asteroid.mp3");
+    this.load.audio("splash", "assets/sounds/splash.mp3");
     this.load.audio("stageclear2", "assets/sounds/stageclear2.mp3");
 
-    this.load.bitmapFont(
-      "arcade",
-      "assets/fonts/arcade.png",
-      "assets/fonts/arcade.xml"
-    );
     this.load.bitmapFont(
       "wendy",
       "assets/fonts/wendy.png",
       "assets/fonts/wendy.xml"
-    );
-    this.load.bitmapFont(
-      "starshipped",
-      "assets/fonts/starshipped.png",
-      "assets/fonts/starshipped.xml"
     );
     this.load.spritesheet("shot", "assets/images/shot.png", {
       frameWidth: 32,
       frameHeight: 32,
     });
     this.load.spritesheet("shotfoe", "assets/images/shotfoe.png", {
-      frameWidth: 32,
-      frameHeight: 32,
-    });
-    this.load.spritesheet("energy", "assets/images/energy.png", {
       frameWidth: 32,
       frameHeight: 32,
     });

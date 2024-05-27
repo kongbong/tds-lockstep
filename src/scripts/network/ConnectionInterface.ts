@@ -8,7 +8,7 @@ export default interface ConnectionInterface {
   OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
-  onDisconnectedPlayer: (playerId: string) => void;
+  onRemovePlayer: (playerId: string) => void;
   onFrameData: (frameData: FrameData) => void;
 
   connect(playerId: string, addr: string|undefined): void;

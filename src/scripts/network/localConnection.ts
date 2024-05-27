@@ -19,7 +19,7 @@ export default class LocalConnection implements ConnectionInterface {
   OnRecvNewPlayer: (info: NewPlayerInfo) => void;
   onRecvAllJoin: () => void;
   onRecvStartGame: () => void;
-  onDisconnectedPlayer: (playerId: string) => void;
+  onRemovePlayer: (playerId: string) => void;
   onFrameData: (frameData: FrameData) => void;
 
   remainInterval: number = 0;

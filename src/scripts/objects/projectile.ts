@@ -4,7 +4,7 @@ import { DrawDepth } from './drawDepth';
 export default class Projectile extends Phaser.GameObjects.Sprite {  
   simulationProjectile: SimulationProjectile;
   
-  create() {
+  create() {    
     this.depth = DrawDepth.PROJECTILE;
   }
 
