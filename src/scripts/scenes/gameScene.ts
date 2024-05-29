@@ -1,4 +1,4 @@
-import SimulationShip from "../simulation/simulationShip";
+import { SimulationShip } from "../simulation/simulationShip";
 import Ship from "../objects/ship";
 import Minimap from "../objects/miniMap";
 import GameModeInterface from "../gamemodes/gamemodeInterface";
@@ -7,9 +7,12 @@ import { SimulationObjectInterface } from "../simulation/simulationObjectInterfa
 import SimulationProjectile from "../simulation/simulationProjectile";
 import Projectile from "../objects/projectile";
 import NetworkClientInterface from "../network/ConnectionInterface";
-import { GameModeInfo, GameModeType } from "../gamemodes/gameModeInfo";
+import { GameModeInfo, GameModeType } from '../gamemodes/gameModeInfo';
 import { ConnectionType, makeConnection } from "../network/connectionFactory";
 import { DrawDepth } from "../objects/drawDepth";
+import HpBar from "../objects/hpBar";
+import Score from "../objects/score";
+import { EndGameType } from "../gamemodes/endGameType";
 
 class Audios {
   shot: Phaser.Sound.BaseSound;
@@ -20,11 +23,13 @@ class Audios {
 export default class GameScene extends Phaser.Scene {
   myClientID: string;
   conn: NetworkClientInterface;
+  gameModeType: GameModeType;
   gameMode: GameModeInterface|undefined;
 
   audios: Audios;
   thrust: Phaser.GameObjects.Layer;
   minimap: Minimap;
+  hpBar: HpBar;
 
   // objects
   playerShip: Ship|undefined;
@@ -35,14 +40,20 @@ export default class GameScene extends Phaser.Scene {
     super({ key: 'GameScene' });
   }
 
-  create() {
+  init(data: any) {
+    console.log("gameScene init");
+    this.gameModeType = data.gameModeType;
     this.myClientID = crypto.randomUUID();
+  }
 
+  create() {
+    console.log("gameScene create");
     this.loadAudios(); 
-    this.loadAnims();   
+    this.loadAnims();
+    this.addHPBar();
     this.addMinimap(); 
     this.makeProjectileGroup();
-    this.setupGame(GameModeType.ONLINE_PVP);
+    this.setupGame(this.gameModeType);
     this.thrust = this.add.layer();
     this.thrust.depth = DrawDepth.THRUST;
   }
@@ -62,10 +73,25 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 10,
       repeat: -1,
     });
-  }  
+    this.anims.create({
+      key: "foeshot",
+      frames: this.anims.generateFrameNames("shotfoe"),
+      frameRate: 10,
+      repeat: -1,
+    });
+  } 
+
+  addHPBar() {
+    this.hpBar = new HpBar(this, 50, 50, 300, 50);
+  }
 
   addMinimap() {
-    this.minimap = new Minimap(this, 120, 120, 100, 0x000000);
+    this.minimap = new Minimap(
+      this, 
+      +this.sys.game.config.width - 120,
+      120,
+      100, 
+      0x000000);
   }
   
   makeProjectileGroup() {
@@ -119,6 +145,14 @@ export default class GameScene extends Phaser.Scene {
     gameMode.onEndGame = this.onEndGame.bind(this);
 
     gameMode.initGame(gameInfo);
+
+    this.addScoreText();
+  }
+  
+  addScoreText() {
+    if (this.gameMode) {
+      new Score(this, this.gameMode, 500, 75);
+    }
   }
 
   // all players joined, will start in 3sec
@@ -196,8 +230,13 @@ export default class GameScene extends Phaser.Scene {
     projectile.simulationProjectile = simulationProjectile;
     projectile.setVisible(true);
     projectile.setActive(true);
-    this.playAudio("shot");
-    projectile.anims.play("shot", true);
+    if (simulationProjectile.isMyProjectile) {
+      this.playAudio("shot");
+      projectile.anims.play("shot", true);
+    } else {
+      this.playAudio("foeshot");
+      projectile.anims.play("foeshot", true);
+    }
   }
   
   setCamera(target: Ship) {
@@ -208,7 +247,7 @@ export default class GameScene extends Phaser.Scene {
   onRemoveObj(objId: string) {
     let removed = false;
     if (objId === this.playerShip?.simulationShip.id) {
-      this.playerShip?.destroy();
+      this.playerShip?.destroy();      
       this.playerShip = undefined;
       removed = true;
     } else {
@@ -237,9 +276,27 @@ export default class GameScene extends Phaser.Scene {
       this.gameMode.update(deltaTime);
     }
     this.minimap.update();
+    this.hpBar.update();
   }
 
-  onEndGame() {
-    this.scene.start("endGame");
+  onEndGame(endGameType: EndGameType) {
+    this.conn.sendEndGame({
+      endGameType: endGameType,
+    });
+    this.time.delayedCall(1000, this.destroy, [endGameType], this);    
+  }
+
+  destroy(endGameType: EndGameType) {
+    this.scene.start("EndGame", {
+      endGameType: endGameType,
+    });
+
+    this.conn.close();
+    delete this.gameMode;
+    const manager = this.scene.manager;
+    this.events.on('destroy', ()=>{
+      manager.add("GameScene", GameScene);
+    });
+    this.scene.remove();
   }
 }

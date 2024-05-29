@@ -1,11 +1,13 @@
 export default class Transition extends Phaser.Scene {
     next: string;
+    data: any;
     constructor() {
         super({ key: "transition" });
     }
 
     init(data: any) {
         this.next = data.next;
+        this.data = data.data;
     }
 
     create() {
@@ -40,7 +42,7 @@ export default class Transition extends Phaser.Scene {
     }
 
     loadNext() {
-        this.scene.start(this.next);
+        this.scene.start(this.next, this.data);
     }
 
     playMusic(name = "muzik1") {

@@ -34,7 +34,7 @@ export default class SocketIOConnection implements ConnectionInterface {
       this.onRecvGameInfo(gameInfo);
     });
     this.socket.on("newPlayer", (newPlayerInfo: NewPlayerInfo) => {      
-      this.playerKeys[newPlayerInfo.oldPlayerId] = undefined;
+      delete this.playerKeys[newPlayerInfo.oldPlayerId];
       this.playerKeys[newPlayerInfo.newPlayerId] = true;
       this.OnRecvNewPlayer(newPlayerInfo);
     });
@@ -46,7 +46,7 @@ export default class SocketIOConnection implements ConnectionInterface {
     });
     this.socket.on("removePlayer", (playerId: string) => {
       if (this.playerKeys[playerId]) {
-        this.playerKeys[playerId] = undefined;
+        delete this.playerKeys[playerId];
         this.onRemovePlayer(playerId);
       }
     });
@@ -64,6 +64,10 @@ export default class SocketIOConnection implements ConnectionInterface {
 
   close(): void {
     this.socket.close();
+  }
+  
+  sendEndGame(report: any): void {
+    this.socket.emit("endGame", report);
   }
   
   sendInputData(inputData: InputData): void {

@@ -2,6 +2,7 @@ import FrameData from "../networkdata/frameData";
 import { ObjectType, SimulationObjectInterface } from "./simulationObjectInterface";
 import SimulationWorld from "./simulationWorld";
 import PhysicsBody from "./physicsBody";
+import { SimulationShip } from "./simulationShip";
 
 const lifeTime = 1;
 const velocityScale = 500;
@@ -15,25 +16,37 @@ export default class SimulationProjectile implements SimulationObjectInterface {
   y: number;
   angle: number;
   objType: ObjectType;
+  isRecycle: boolean = true;
 
   playerId: string;
   velocity: Phaser.Math.Vector2;
   timeLeft: number;
   hitted: boolean = false;
+  isMyProjectile: boolean = false;
     
-  constructor(playerId: string, x: number, y: number, angle: number, simulationWorld: SimulationWorld) {
+  constructor(
+    playerId: string, 
+    x: number, 
+    y: number, 
+    angle: number,
+    isMyProjectile: boolean) {
     this.playerId = playerId;
     this.x = x;
     this.y = y;
     this.angle = angle;
+    this.isMyProjectile = isMyProjectile;
 
     const rotation = Phaser.Math.DegToRad(this.angle);
     this.velocity = new Phaser.Math.Vector2(Math.cos(rotation), Math.sin(rotation));
     this.velocity.scale(velocityScale);
     
     this.timeLeft = lifeTime;
-    this.objType = ObjectType.Projectile;
-    this.world = simulationWorld;
+    this.objType = ObjectType.Projectile;    
+  }
+  
+  onAddToSimulationWorld(world: SimulationWorld, id: string) {
+    this.id = id;
+    this.world = world;
 
     this.physicsBody = new PhysicsBody(this.world.physics.world, this.x, this.y);    
     this.world.physics.world.add(this.physicsBody);
@@ -43,7 +56,8 @@ export default class SimulationProjectile implements SimulationObjectInterface {
     this.physicsBody.setVelocity(this.velocity.x, this.velocity.y);
     this.physicsBody.simulationObject = this;
 
-    const enemyShips = Array<PhysicsBody>(...this.world.ships
+    const enemyShips = Array<PhysicsBody>(...this.world.getObjsByType(ObjectType.Ship)
+      .map((obj) => obj as SimulationShip)
       .filter((ship) => ship.playerId !== this.playerId)
       .map((ship) => ship.physicsBody));
 
@@ -62,7 +76,9 @@ export default class SimulationProjectile implements SimulationObjectInterface {
     console.log("hitProjectile", projectile, ship);
     this.hitted = true;
     this.world.removeObj(projectile.id);
-    //this.removeObj(ship.id);
+    
+    const shiObj = ship as SimulationShip;
+    shiObj.hit(this.playerId);
   }
   
   setId(id: string): void {

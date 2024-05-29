@@ -3,6 +3,8 @@ import GameScene from './scenes/gameScene'
 import PreloadScene from './scenes/preloadScene'
 import Splash from './scenes/splash'
 import Transition from './scenes/transition'
+import EndGameScene from './scenes/endGame'
+import MainMenuScene from './scenes/mainmenu'
 
 const DEFAULT_WIDTH = 1280
 const DEFAULT_HEIGHT = 720
@@ -17,7 +19,7 @@ const config = {
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT
   },
-  scene: [PreloadScene, Splash, Transition, GameScene]
+  scene: [PreloadScene, Splash, MainMenuScene, Transition, GameScene, EndGameScene]
 }
 
 window.addEventListener('load', () => {

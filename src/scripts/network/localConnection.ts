@@ -41,11 +41,22 @@ export default class LocalConnection implements ConnectionInterface {
       angle: 0,
       isLocal: true,
     });
+    gameInfo.playerStartingInfos.push({
+      playerId: "Player2",
+      x: 700,
+      y: 600,
+      angle: 0,
+      isLocal: false,
+    });
     this.onRecvGameInfo(gameInfo);
   }
 
   close(): void {
     // nothing to do    
+  }
+
+  sendEndGame(report: any): void {
+    // nothing to send
   }
 
   sendInputData(inputData: InputData): void {

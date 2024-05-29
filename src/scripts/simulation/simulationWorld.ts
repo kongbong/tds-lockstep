@@ -1,11 +1,10 @@
-import { SimulationObjectInterface } from "./simulationObjectInterface";
+import { ObjectType, SimulationObjectInterface } from "./simulationObjectInterface";
 import FrameDataGetter from "../networkdata/frameDataGetter";
 import FrameData from "../networkdata/frameData";
 import { ArcadePhysics } from "arcade-physics";
 import { Body as PhysicsBody } from 'arcade-physics/lib/physics/arcade/Body';
 import SimulationProjectile from "./simulationProjectile";
-import SimulationShip from "./simulationShip";
-import Projectile from '../objects/projectile';
+import Timer from "../timer/timer";
 
 // each simution update time 10ms
 const fixedUpdateTime = 10;
@@ -16,8 +15,9 @@ const fixedUpdateTime = 10;
 export default class SimulationWorld {
   onAddObj: (obj: SimulationObjectInterface) => void;
   onRemoveObj: (id: string) => void;
-
+  
   physics: ArcadePhysics;
+  timer: Timer;
 
   frameGetter: FrameDataGetter;
   isStarted: boolean = false;
@@ -26,12 +26,11 @@ export default class SimulationWorld {
   worldSimulationTime: number = 0;
   acculatedTime: number = 0;
 
-  objs: any;
-  ships: SimulationShip[] = [];
+  objs: any = {};
+  objTypeMap: any = {}; 
 
   constructor(frameGetter: FrameDataGetter) {
     this.frameGetter = frameGetter;  
-    this.objs = {};
 
     this.initPhysicsWorld();    
   }
@@ -59,6 +58,7 @@ export default class SimulationWorld {
   start() {
     this.isStarted = true;
     this.worldSimulationTime = 0;
+    this.timer = new Timer(this.worldSimulationTime);
   }   
 
   newObjId(): string {
@@ -67,27 +67,28 @@ export default class SimulationWorld {
   }
 
   addObj(obj: SimulationObjectInterface) {
-    obj.setId(this.newObjId());
+    obj.onAddToSimulationWorld(this, this.newObjId());
     this.objs[obj.id] = obj;
     this.onAddObj(obj);
-
-    console.log("addObj", obj.id, obj);
-    if (obj instanceof SimulationShip) {
-      this.onAddShip(obj as SimulationShip);
+    
+    if (!this.objTypeMap[obj.objType]) {
+      this.objTypeMap[obj.objType] = {};
     }
-  }
-
-  onAddShip(ship: SimulationShip) {
-    this.ships.push(ship);
+    this.objTypeMap[obj.objType][obj.id] = obj;
   }
 
   removeObj(objId: string) {
     const obj = this.objs[objId];
     if (obj) {
+      delete this.objTypeMap[obj.objType][objId];
       obj.destroy();
-      this.objs[objId] = undefined;
+      delete this.objs[objId];
       this.onRemoveObj(objId);
     }    
+  }
+
+  getObjsByType(objType: ObjectType): SimulationObjectInterface[] {
+    return Object.values(this.objTypeMap[objType]);
   }
    
   // Simulation update
@@ -114,7 +115,8 @@ export default class SimulationWorld {
     if (!frameData) {
       return dt;
     }
-    this.worldSimulationTime += dt;
+    this.worldSimulationTime += frameData.duration;
+    this.timer.update(frameData.duration);
 
     this.updateObjs(frameData);
     this.physics.world.update(this.worldSimulationTime, dt);   

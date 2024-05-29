@@ -14,5 +14,6 @@ export default interface ConnectionInterface {
   connect(playerId: string, addr: string|undefined): void;
   close(): void;
   sendInputData(inputData: InputData): void;
+  sendEndGame(report: any): void;
   update(dt:number):void;
 }

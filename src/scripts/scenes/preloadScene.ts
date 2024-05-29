@@ -52,9 +52,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.on(
       "progress",
       (value: any) => {
-        this.loadBar.clear();
-        this.loadBar.fillStyle(0x00ff00, 1);
-        this.loadBar.fillRect(
+        this.progressBar.clear();
+        this.progressBar.fillStyle(0x00ff00, 1);
+        this.progressBar.fillRect(
           this.cameras.main.width / 4,
           this.cameras.main.height / 2 - 16,
           (this.cameras.main.width / 2) * value,

@@ -30,31 +30,41 @@ For debugging purposes, we left some logs on these events.
 let playerCount = 0;
 let lastInputs = {};
 let isStarted = false;
-const players = {};
+let players = {};
 
 // predefined game info
 // this will be set when gameserver is assigned
 // but for now, we will use this as a default value
-let gameInfo = {
-  type: "ONLINE_PVP",
-  name: "default game",
-  playerStartingInfos: [
-    {
-      playerId: "player1",
-      name: "player1",
-      x: 600,
-      y: 500,
-      angle: 0,
-    },
-    {
-      playerId: "player2",
-      name: "player2",
-      x: 700,
-      y: 600,
-      angle: 0,
-    },
-  ],
-};
+let gameInfo = {};
+
+function resetGame() {
+
+  playerCount = 0;
+  lastInputs = {};
+  isStarted = false;
+  players = {};
+  gameInfo = {
+    type: "ONLINE_PVP",
+    name: "default game",
+    playerStartingInfos: [
+      {
+        playerId: "player1",
+        name: "player1",
+        x: 600,
+        y: 500,
+        angle: 0,
+      },
+      {
+        playerId: "player2",
+        name: "player2",
+        x: 700,
+        y: 600,
+        angle: 0,
+      },
+    ],
+  };
+}
+resetGame();
 
 io.on("connection", function (socket) {
   socket.on("join", function (info) {
@@ -87,13 +97,25 @@ io.on("connection", function (socket) {
     const key = input_data?.id;
     if (!players[key]) return;
     lastInputs[key] = input_data;
-  });  
+  });
+
+  socket.on("endGame", function (report) {
+    console.log("Game ended with report:", report);
+    resetGame();
+  });
 
   socket.on("disconnect", function (reason) {
     console.log("Player disconnected:", socket.key);
-    delete players[socket.key];
-    delete lastInputs[socket.key];
-    io.sockets.emit("removePlayer", socket.key);
+    if (players[socket.key]) {
+      delete players[socket.key];
+      delete lastInputs[socket.key];
+      playerCount--;
+      io.sockets.emit("removePlayer", socket.key);
+      
+      if (playerCount == 0) {
+        resetGame();
+      }
+    }
   });
 });
 
